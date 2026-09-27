@@ -27,6 +27,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
   checkov:
     name: IaC Security Scan
     runs-on: ubuntu-24.04
@@ -41,6 +42,7 @@ jobs:
           directory: ./k8s
           framework: kubernetes
           quiet: false
+
 
   frontend-security:
     name: Frontend Dependency Security
@@ -64,6 +66,7 @@ jobs:
       - name: Run npm audit
         working-directory: ./frontend
         run: npm audit --audit-level=high
+
 
   trivy-filesystem:
     name: Filesystem Vulnerability Scan
@@ -92,6 +95,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '1'
+
 
   docker-build:
     name: Build Backend Image
@@ -129,6 +133,7 @@ jobs:
         with:
           name: backend-sbom
           path: backend-sbom.json
+
 
   frontend-docker-build:
     name: Build Frontend Image
@@ -168,6 +173,7 @@ jobs:
           name: frontend-sbom
           path: frontend-sbom.json
 
+
   publish-backend:
     name: Publish Backend Image
     runs-on: ubuntu-24.04
@@ -180,6 +186,10 @@ jobs:
       - docker-build
       - frontend-docker-build
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -191,16 +201,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build backend image
-        run: |
-          docker build \
-            -t ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }} \
-            ./backend
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ALwin777-ops/devsecops-zero-trust-platform
 
-      - name: Push backend image
-        run: |
-          docker push \
-            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
 
   publish-frontend:
     name: Publish Frontend Image
@@ -214,6 +223,10 @@ jobs:
       - docker-build
       - frontend-docker-build
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -225,14 +238,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build frontend image
-        run: |
-          docker build \
-            --build-arg VITE_BACKEND_HOST=http://backend:8080 \
-            -t ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }} \
-            ./frontend
-
-      - name: Push frontend image
-        run: |
-          docker push \
-            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          build-args: |
+            VITE_BACKEND_HOST=http://backend:8080
+          tags: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ALwin777-ops/devsecops-zero-trust-platform
