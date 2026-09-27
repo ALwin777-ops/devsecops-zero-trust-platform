@@ -126,3 +126,40 @@ jobs:
         with:
           name: backend-sbom
           path: backend-sbom.json
+  frontend-docker-build:
+    name: Build Frontend Image
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            --build-arg VITE_BACKEND_HOST=http://backend:8080 \
+            -t devsecops-frontend:${{ github.sha }} \
+            ./frontend
+
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: devsecops-frontend:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Generate frontend SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: devsecops-frontend:${{ github.sha }}
+          format: cyclonedx
+          output: frontend-sbom.json
+          scan-type: image
+
+      - name: Upload frontend SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sbom
+          path: frontend-sbom.json
