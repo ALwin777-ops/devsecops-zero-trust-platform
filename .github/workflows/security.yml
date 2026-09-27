@@ -15,20 +15,20 @@ jobs:
 
   gitleaks:
     name: Secret Scanning
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   checkov:
     name: IaC Security Scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -43,7 +43,7 @@ jobs:
 
   trivy-filesystem:
     name: Filesystem Vulnerability Scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -61,7 +61,7 @@ jobs:
         run: mvn dependency:resolve
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -70,7 +70,7 @@ jobs:
           exit-code: '1'
   docker-build:
     name: Build Backend Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -83,7 +83,7 @@ jobs:
             ./backend
 
       - name: Scan backend image with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devsecops-backend:${{ github.sha }}
           format: table
@@ -92,7 +92,7 @@ jobs:
           exit-code: '1'
 
       - name: Generate backend SBOM
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devsecops-backend:${{ github.sha }}
           format: cyclonedx
