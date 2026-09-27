@@ -1,0 +1,435 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Kubernetes Alerts
+    folder: DevSecOps Kubernetes
+    interval: 1m
+    rules:
+
+      # 1. Backend deployment replicas low
+      - uid: bfz4ufb578zcwb
+        title: BackendDeploymentReplicasLow
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: kube_deployment_status_replicas_available{namespace="devsecops",deployment="backend"}
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: The devsecops backend deployment has fewer than 2 available replicas. Check backend pods, events, and recent deployments.
+          summary: Backend deployment has fewer than 2 available replicas
+        labels:
+          namespace: devsecops
+          security: warning
+          workload: backend
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 2. Backend pod restart detected
+      - uid: ffz4vxkg9tjb4e
+        title: BackendPodRestartDetected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(increase(kube_pod_container_status_restarts_total{namespace="devsecops",pod=~"backend-.*"}[5m]))
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          description: A backend container has restarted within the last 5 minutes. Check the backend pod status, logs, events, and previous container logs.
+          summary: Backend pod has restarted
+        labels:
+          namespace: devsecops
+          security: warning
+          workload: backend
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 3. Backend deployment unavailable
+      - uid: backend-deployment-unavailable
+        title: BackendDeploymentUnavailable
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: kube_deployment_status_replicas_unavailable{namespace="devsecops",deployment="backend"}
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: The devsecops backend deployment has one or more unavailable replicas.
+          summary: Backend deployment has unavailable replicas
+        labels:
+          namespace: devsecops
+          security: warning
+          workload: backend
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 4. Kubernetes node not ready
+      - uid: kubernetes-node-not-ready
+        title: KubernetesNodeNotReady
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: kube_node_status_condition{condition="Ready",status="true"}
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: A Kubernetes node in the cluster is reporting Ready=false.
+          summary: Kubernetes node is not ready
+        labels:
+          namespace: monitoring
+          security: warning
+          workload: kubernetes
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 5. Pod pending too long
+      - uid: pod-pending-too-long
+        title: PodPendingTooLong
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(kube_pod_status_phase{namespace="devsecops",phase="Pending"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: One or more pods in the devsecops namespace have remained Pending for at least 5 minutes.
+          summary: Pod has remained pending
+        labels:
+          namespace: devsecops
+          security: warning
+          workload: kubernetes
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 6. MySQL pod restart detected
+      - uid: mysql-pod-restart
+        title: MySQLPodRestartDetected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: sum(increase(kube_pod_container_status_restarts_total{namespace="devsecops",pod="mysql-0"}[5m]))
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          description: The MySQL StatefulSet pod mysql-0 has restarted within the last 5 minutes.
+          summary: MySQL pod has restarted
+        labels:
+          namespace: devsecops
+          security: warning
+          workload: mysql
+        isPaused: false
+        notification_settings:
+          receiver: empty
+
+      # 7. MySQL down
+      - uid: mysql-down
+        title: MySQLDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: kube_statefulset_status_replicas_ready{namespace="devsecops",statefulset="mysql"}
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: The devsecops MySQL StatefulSet has no ready replicas.
+          summary: MySQL is not ready
+        labels:
+          namespace: devsecops
+          security: critical
+          workload: mysql
+        isPaused: false
+        notification_settings:
+          receiver: empty

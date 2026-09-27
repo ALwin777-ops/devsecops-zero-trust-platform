@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: "optional:configtree:/run/secrets/"
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}/${DB_DATABASE}
+    username: ${db_user}
+    password: ${db_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

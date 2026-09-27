@@ -1,0 +1,26 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-no-privilege-escalation
+spec:
+  validationActions:
+    - Audit
+
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+
+  validations:
+    - expression: >-
+        object.spec.containers.all(c,
+          c.?securityContext.orValue({}).?allowPrivilegeEscalation.orValue(false) == false
+        )
+      message: "All containers must set securityContext.allowPrivilegeEscalation to false."

@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # MySQL Database (Exposed on 3307 for local tools like DBeaver)
+  mysql:
+    image: mysql:8.4
+    container_name: dockerized_mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-SuperSecretRoot123!}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-demodb}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-SuperSecretUser123!}
+    volumes:
+      - type: volume
+        source: mysql-data
+        target: /var/lib/mysql
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # phpMyAdmin Database Management Interface
+  pma:
+    image: phpmyadmin:latest
+    container_name: dockerized_pma
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "81:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${MYSQL_USER:-appuser}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-SuperSecretUser123!}
+    networks:
+      - backend-net
+
+  # Spring Boot Backend
+  backend:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    container_name: dockerized_backend
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-demodb}?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-appuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-SuperSecretUser123!}
+      SPRING_PROFILES_ACTIVE: dev
+      # Backward compatibility variables for custom application.properties
+      DB_HOSTNAME: mysql:3306
+      DB_USER: ${MYSQL_USER:-appuser}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-SuperSecretUser123!}
+      DB_DATABASE: ${MYSQL_DATABASE:-demodb}
+    volumes:
+      - ./backend:/app:cached
+    networks:
+      - backend-net
+      - frontend-net
+
+  # React / Vite Frontend
+  frontend:
+    depends_on:
+      - backend
+    container_name: dockerized_frontend
+    restart: always
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_HOST: ${VITE_BACKEND_HOST:-http://localhost:8080}
+    ports:
+      - "80:80"
+      - "5173:5173"
+    environment:
+      VITE_BACKEND_HOST: ${VITE_BACKEND_HOST:-http://localhost:8080}
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app:cached
+      - /app/node_modules
+    networks:
+      - frontend-net
+
+volumes:
+  mysql-data:
+
+# Zero Trust Network Segmentation
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge

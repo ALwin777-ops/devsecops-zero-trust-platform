@@ -1,0 +1,69 @@
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Security Scan Reports
+# =========================
+gitleaks-report.json
+checkov-results.json
+checkov-k8s-results.json
+checkov-k8s-results.xml
+backend-sbom.json
+frontend-sbom.json
+mysql-sbom.json
+mysql-current-trivy.json
+final_report_trivy/
+
+# =========================
+# Database Backups
+# =========================
+*.sql
+mysql-backup*.sql
+
+# =========================
+# Generated / Temporary Kubernetes Files
+# =========================
+backend-probes-patch.yaml
+background-controller.yaml
+monitoring-rendered.yaml
+monitoring-current-values.yaml
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+
+# =========================
+# Node
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Build Artifacts
+# =========================
+target/
+dist/
+build/

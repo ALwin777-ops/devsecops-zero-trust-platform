@@ -1,0 +1,26 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-seccomp-runtime-default
+spec:
+  validationActions:
+    - Audit
+
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+
+  validations:
+    - expression: >-
+        has(object.spec.securityContext) &&
+        object.spec.securityContext.?seccompProfile.hasValue() &&
+        object.spec.securityContext.seccompProfile.?type.orValue("") == "RuntimeDefault"
+      message: "Pods must use seccompProfile.type RuntimeDefault."
