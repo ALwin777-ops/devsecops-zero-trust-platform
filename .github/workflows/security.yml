@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
 
@@ -163,3 +164,70 @@ jobs:
         with:
           name: frontend-sbom
           path: frontend-sbom.json
+  publish-backend:
+    name: Publish Backend Image
+    runs-on: ubuntu-24.04
+
+    needs:
+      - gitleaks
+      - checkov
+      - frontend-security
+      - trivy-filesystem
+      - docker-build
+      - frontend-docker-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build backend image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository }}/backend:${{ github.sha }} \
+            ./backend
+
+      - name: Push backend image
+        run: |
+          docker push \
+            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+  publish-frontend:
+    name: Publish Frontend Image
+    runs-on: ubuntu-24.04
+
+    needs:
+      - gitleaks
+      - checkov
+      - frontend-security
+      - trivy-filesystem
+      - docker-build
+      - frontend-docker-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            --build-arg VITE_BACKEND_HOST=http://backend:8080 \
+            -t ghcr.io/${{ github.repository }}/frontend:${{ github.sha }} \
+            ./frontend
+
+      - name: Push frontend image
+        run: |
+          docker push \
+            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
