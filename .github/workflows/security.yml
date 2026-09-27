@@ -41,6 +41,7 @@ jobs:
           directory: ./k8s
           framework: kubernetes
           quiet: false
+
   frontend-security:
     name: Frontend Dependency Security
     runs-on: ubuntu-24.04
@@ -91,6 +92,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '1'
+
   docker-build:
     name: Build Backend Image
     runs-on: ubuntu-24.04
@@ -127,6 +129,7 @@ jobs:
         with:
           name: backend-sbom
           path: backend-sbom.json
+
   frontend-docker-build:
     name: Build Frontend Image
     runs-on: ubuntu-24.04
@@ -164,6 +167,7 @@ jobs:
         with:
           name: frontend-sbom
           path: frontend-sbom.json
+
   publish-backend:
     name: Publish Backend Image
     runs-on: ubuntu-24.04
@@ -196,7 +200,8 @@ jobs:
       - name: Push backend image
         run: |
           docker push \
-            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
+
   publish-frontend:
     name: Publish Frontend Image
     runs-on: ubuntu-24.04
@@ -230,4 +235,4 @@ jobs:
       - name: Push frontend image
         run: |
           docker push \
-            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
