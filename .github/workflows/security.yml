@@ -190,7 +190,7 @@ jobs:
       - name: Build backend image
         run: |
           docker build \
-            -t ghcr.io/${{ github.repository }}/backend:${{ github.sha }} \
+            -t ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }} \
             ./backend
 
       - name: Push backend image
@@ -224,7 +224,7 @@ jobs:
         run: |
           docker build \
             --build-arg VITE_BACKEND_HOST=http://backend:8080 \
-            -t ghcr.io/${{ github.repository }}/frontend:${{ github.sha }} \
+            -t ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }} \
             ./frontend
 
       - name: Push frontend image
