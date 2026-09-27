@@ -128,11 +128,22 @@ jobs:
           output: backend-sbom.json
           scan-type: image
 
-      - name: Upload SBOM
+      - name: Upload backend SBOM
         uses: actions/upload-artifact@v4
         with:
           name: backend-sbom
           path: backend-sbom.json
+
+      - name: Save scanned backend image
+        run: |
+          docker save devsecops-backend:${{ github.sha }} | gzip > backend-image.tar.gz
+
+      - name: Upload scanned backend image
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: backend-image.tar.gz
+          retention-days: 1
 
 
   frontend-docker-build:
@@ -173,10 +184,23 @@ jobs:
           name: frontend-sbom
           path: frontend-sbom.json
 
+      - name: Save scanned frontend image
+        run: |
+          docker save devsecops-frontend:${{ github.sha }} | gzip > frontend-image.tar.gz
+
+      - name: Upload scanned frontend image
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: frontend-image.tar.gz
+          retention-days: 1
+
 
   publish-backend:
     name: Publish Backend Image
     runs-on: ubuntu-24.04
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     needs:
       - gitleaks
@@ -191,8 +215,15 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download scanned backend image
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: ./backend-image
+
+      - name: Load scanned backend image
+        run: |
+          gunzip -c ./backend-image/backend-image.tar.gz | docker load
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -201,20 +232,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          tags: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/ALwin777-ops/devsecops-zero-trust-platform
+      - name: Tag scanned backend image
+        run: |
+          docker tag \
+            devsecops-backend:${{ github.sha }} \
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
+
+      - name: Push scanned backend image
+        run: |
+          docker push \
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend:${{ github.sha }}
 
 
   publish-frontend:
     name: Publish Frontend Image
     runs-on: ubuntu-24.04
 
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     needs:
       - gitleaks
       - checkov
@@ -228,8 +263,15 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download scanned frontend image
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: ./frontend-image
+
+      - name: Load scanned frontend image
+        run: |
+          gunzip -c ./frontend-image/frontend-image.tar.gz | docker load
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -238,13 +280,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          build-args: |
-            VITE_BACKEND_HOST=http://backend:8080
-          tags: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/ALwin777-ops/devsecops-zero-trust-platform
+      - name: Tag scanned frontend image
+        run: |
+          docker tag \
+            devsecops-frontend:${{ github.sha }} \
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
+
+      - name: Push scanned frontend image
+        run: |
+          docker push \
+            ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend:${{ github.sha }}
