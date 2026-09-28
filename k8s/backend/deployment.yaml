@@ -34,8 +34,8 @@ spec:
 
       containers:
         - name: backend
-          image: dockerized-spring-react-mysql-backend:1.0.2
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/backend@sha256:03ecba6d3327f4db7d758449d3f76d6a3b4b88acb69e48ef974f167929e40af4
+          imagePullPolicy: Always
 
           securityContext:
             allowPrivilegeEscalation: false

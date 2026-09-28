@@ -6,8 +6,6 @@ metadata:
   labels:
     app: frontend
   annotations:
-    checkov.io/skip1: CKV_K8S_43=Local Kind image; registry digest unavailable
-    checkov.io/skip2: CKV_K8S_15=Local Kind image; Always pull requires a registry
     checkov.io/skip3: CKV_K8S_40=Container uses image-defined UID 101
 
 spec:
@@ -35,8 +33,8 @@ spec:
 
       containers:
         - name: frontend
-          image: dockerized-spring-react-mysql-frontend:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/alwin777-ops/devsecops-zero-trust-platform/frontend@sha256:3c02777f45e3ab18372a375796c15076df1cc6b07b211cff3a1ff54e24628dec
+          imagePullPolicy: Always
 
           securityContext:
             allowPrivilegeEscalation: false
