@@ -67,3 +67,8 @@ yarn-error.log*
 target/
 dist/
 build/
+
+# Local Vault recovery backups
+vault-values-backup.yaml
+vault-config-backup.yaml
+backend-before-vault-reset.yaml
