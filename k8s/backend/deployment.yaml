@@ -8,6 +8,7 @@ metadata:
   annotations:
     checkov.io/skip1: CKV_K8S_43=Local Kind environment; production will use a registry-backed immutable image digest
     checkov.io/skip2: CKV_K8S_15=Local Kind environment; production will use a registry-backed image with Always pull policy
+    checkov.io/skip3: CKV_K8S_38=Required for Vault Kubernetes authentication using backend-sa
 
 spec:
   replicas: 2
@@ -112,6 +113,3 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-
-
-

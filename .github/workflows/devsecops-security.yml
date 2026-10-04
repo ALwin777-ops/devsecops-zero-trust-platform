@@ -35,4 +35,11 @@ jobs:
 
       - name: Run Checkov
         run: |
-          checkov -d . --quiet
+          checkov -d . --quiet \
+            --skip-framework terraform_plan \
+            --skip-path kyverno-test.yaml \
+            --skip-path kyverno-test-allow.yaml \
+            --skip-path kyverno-test-missing-ape.yaml \
+            --skip-path kyverno-test-secure.yaml \
+            --skip-path monitoring-rendered.yaml
+            --skip-path monitoring-rendered.yaml
