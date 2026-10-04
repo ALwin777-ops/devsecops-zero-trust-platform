@@ -67,7 +67,7 @@ The project uses a local **Kind Kubernetes cluster** and a separate **Wazuh depl
         -----------------------------------------
 
        Windows Endpoint
-       ALWIN-WINDOWS
+       USER-WINDOWSS
               |
               v
         Wazuh Agent
@@ -517,7 +517,7 @@ The Wazuh environment includes:
 A Windows endpoint was enrolled as:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The event pipeline is:

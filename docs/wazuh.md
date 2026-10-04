@@ -72,7 +72,7 @@ The implemented Wazuh environment follows this logical architecture:
 ┌───────────────────────────────┐
 │       Windows Endpoint        │
 │                               │
-│       ALWIN-WINDOWS           │
+│       USER-WINDOWSS           │
 │                               │
 │        Wazuh Agent            │
 └───────────────┬───────────────┘
@@ -170,7 +170,7 @@ A Windows endpoint was enrolled into the Wazuh environment.
 The logical Wazuh agent name is:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The endpoint acts as the monitored system in the lab.

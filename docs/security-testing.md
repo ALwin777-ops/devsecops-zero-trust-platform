@@ -118,7 +118,7 @@ WSL
 The monitored Windows endpoint is registered as:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 ---
@@ -844,7 +844,7 @@ The Windows endpoint was enrolled into Wazuh.
 The registered logical agent name is:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The agent was confirmed to communicate with the Wazuh environment.

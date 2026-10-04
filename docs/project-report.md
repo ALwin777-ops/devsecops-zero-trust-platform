@@ -744,7 +744,7 @@ Wazuh version:
 A Windows endpoint agent is enrolled with the logical name:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The runtime event path is:

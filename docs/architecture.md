@@ -118,7 +118,7 @@ The architecture follows a defense-in-depth model rather than relying on a singl
 
                   ┌────────────────────────────┐
                   │     Windows Endpoint       │
-                  │      ALWIN-WINDOWS         │
+                  │      USER-WINDOWSS         │
                   └─────────────┬──────────────┘
                                 │
                                 ▼
@@ -684,7 +684,7 @@ A Windows Wazuh agent was enrolled with the following logical identity:
 
 ```text
 Agent:
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The agent successfully connected to the Wazuh manager.

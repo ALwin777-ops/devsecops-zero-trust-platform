@@ -898,7 +898,7 @@ Wazuh Agent
 A Windows Wazuh agent was enrolled using the logical agent identity:
 
 ```text
-ALWIN-WINDOWS
+USER-WINDOWSS
 ```
 
 The agent successfully communicated with the Wazuh manager.
