@@ -8,6 +8,7 @@ metadata:
   annotations:
     checkov.io/skip1: CKV_K8S_43=Local Kind environment; production will use a registry-backed immutable image digest
     checkov.io/skip2: CKV_K8S_15=Local Kind environment; production will use a registry-backed image with Always pull policy
+    checkov.io/skip3: CKV_K8S_38=Required for Vault Kubernetes authentication using backend-sa
 
 spec:
   replicas: 2
@@ -21,9 +22,22 @@ spec:
       labels:
         app: backend
 
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "devsecops-backend"
+        vault.hashicorp.com/agent-inject-secret-db_user: "secret/data/devsecops/backend"
+        vault.hashicorp.com/agent-inject-template-db_user: '{{- with secret "secret/data/devsecops/backend" -}}{{ .Data.data.username }}{{- end }}'
+        vault.hashicorp.com/agent-inject-secret-db_password: "secret/data/devsecops/backend" # checkov:skip=CKV_SECRET_6:Vault secret path, not a secret value
+        vault.hashicorp.com/agent-inject-template-db_password: '{{- with secret "secret/data/devsecops/backend" -}}{{ .Data.data.password }}{{- end }}'
+        vault.hashicorp.com/secret-volume-path: "/run/secrets"
+        vault.hashicorp.com/agent-run-as-user: "10001"
+        vault.hashicorp.com/agent-run-as-group: "10001"
+        vault.hashicorp.com/agent-run-as-non-root: "true"
+        vault.hashicorp.com/agent-run-as-same-user: "true"
+
     spec:
       serviceAccountName: backend-sa
-      automountServiceAccountToken: false
+      automountServiceAccountToken: true # checkov:skip=CKV_K8S_38:Required for Vault Kubernetes authentication using backend-sa
 
       securityContext:
         runAsNonRoot: true
@@ -38,6 +52,11 @@ spec:
           imagePullPolicy: Always
 
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
@@ -47,10 +66,6 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-
-            - name: db-secrets
-              mountPath: /run/secrets
-              readOnly: true
 
           ports:
             - containerPort: 8080
@@ -98,14 +113,3 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-
-        - name: db-secrets
-          secret:
-            secretName: mysql-secret
-            items:
-              - key: MYSQL_USER
-                path: db_user
-
-              - key: MYSQL_PASSWORD
-                path: db_password
-
