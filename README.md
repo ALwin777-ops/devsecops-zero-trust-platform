@@ -174,17 +174,19 @@ Intentional exclusions include generated files and dedicated Kyverno test manife
 
 Trivy was used for Kubernetes security scanning.
 
-Final cluster validation:
+Final Kubernetes validation:
 
 ```text
-Resources scanned: 324 / 324
-Node scanning: enabled
+Resources scanned: 19 / 19
+Kubernetes misconfigurations: 0
+Secrets detected: 0
+RBAC findings: 0
 ```
 
 Command used:
 
 ```text
-trivy k8s kind-devsecops-lab --report summary --timeout 15m
+trivy k8s kind-devsecops-lab --include-namespaces devsecops --report summary --timeout 10m --disable-node-collector
 ```
 
 Trivy was also used to support container security analysis and SBOM generation.
@@ -345,9 +347,27 @@ require-seccomp-runtime-default
 require-resource-requests-limits
 ```
 
-The policies provide continuous validation of workload security configuration.
+The policies provide continuous validation and admission control for workload security configuration.
 
-Kyverno was configured with audit-oriented validation for the security controls used in this local laboratory.
+Validation modes are intentionally separated by control:
+
+```text
+require-no-privilege-escalation
+  Action: Deny
+
+require-run-as-nonroot
+  Action: Audit
+
+require-seccomp-runtime-default
+  Action: Audit
+
+require-resource-requests-limits
+  Action: Audit
+```
+
+The admission-control path was runtime tested using a deliberately insecure Pod with allowPrivilegeEscalation: true. Kyverno rejected the admission request and the Pod was not created.
+
+This demonstrates that the privilege-escalation control is actively enforced rather than only documented or statically scanned.
 
 ---
 
@@ -704,13 +724,14 @@ Checkov GitHub Actions
   0 failed
 
 Trivy Kubernetes
-  324 / 324 resources scanned
+  19 / 19 devsecops resources scanned
 
 Vault
   Authentication + injection validated
 
 Kyverno
-  Security policies validated
+  4 security policies configured
+  Privilege-escalation admission control runtime tested
   MySQL exception documented
 
 Wazuh
