@@ -91,29 +91,28 @@ The project uses a local **Kind Kubernetes cluster** and a separate **Wazuh depl
 
 ### DevSecOps & CI/CD Security
 
-The project integrates security checks into the GitHub Actions workflow, including:
+The project integrates security checks into GitHub Actions, including:
 
 * Gitleaks secret detection
 * Checkov security configuration scanning
 * Dockerfile security scanning
 * Kubernetes configuration scanning
 * GitHub Actions workflow scanning
+* Dependency auditing
+* Trivy filesystem and container image scanning
+* CycloneDX SBOM generation
 * Security-focused repository validation
 
-The workflow is triggered for:
+The repository contains two complementary GitHub Actions security workflows:
 
-* `main`
-* `security/**`
-* Pull requests targeting `main`
+* `.github/workflows/security.yml` — the comprehensive security pipeline covering Gitleaks, Checkov, dependency auditing, Trivy filesystem and container image scanning, SBOM generation, and GitHub Container Registry publishing. It uses `contents: read` and `packages: write` permissions.
+* `.github/workflows/devsecops-security.yml` — a lightweight security validation workflow covering Gitleaks and Checkov. It uses `contents: read` permissions.
 
-The workflow uses read-only repository permissions:
+The comprehensive workflow is triggered on pushes to `main` and pull requests targeting `main`.
 
-```yaml
-permissions:
-  contents: read
-```
+The lightweight validation workflow is triggered on pushes to `main` and `security/**` branches, and on pull requests targeting `main`.
 
-The project intentionally focuses on security validation rather than implementing a full artifact publishing or production deployment pipeline.
+The project intentionally focuses on security validation rather than implementing a production deployment pipeline.
 
 OWASP recommends integrating security activities into CI/CD so security issues can be identified earlier in the development lifecycle.
 
@@ -133,11 +132,7 @@ Repository size: ~187 KB
 Leaks detected: 0
 ```
 
-Evidence:
-
-```text
-gitleaks-report.json
-```
+Validation evidence was generated locally and is intentionally excluded from version control.
 
 ---
 
@@ -178,6 +173,7 @@ Final Kubernetes validation:
 
 ```text
 Resources scanned: 19 / 19
+
 Kubernetes misconfigurations: 0
 Secrets detected: 0
 RBAC findings: 0
@@ -204,6 +200,8 @@ mysql-sbom.json
 ```
 
 The SBOMs provide machine-readable component inventories that can support vulnerability and dependency visibility.
+
+Generated SBOM files are treated as validation artifacts and are intentionally excluded from version control.
 
 SBOMs are a recognized software supply-chain security practice for maintaining visibility into application components and dependencies.
 
@@ -291,6 +289,12 @@ Security controls include:
 * Kyverno policies
 * Trivy Kubernetes scanning
 
+The repository includes the Kubernetes namespace and application ServiceAccounts required for reproducible deployment:
+
+```text
+k8s/security/namespace-and-serviceaccounts.yaml
+```
+
 ---
 
 # Zero Trust Network Segmentation
@@ -365,7 +369,7 @@ require-resource-requests-limits
   Action: Audit
 ```
 
-The admission-control path was runtime tested using a deliberately insecure Pod with allowPrivilegeEscalation: true. Kyverno rejected the admission request and the Pod was not created.
+The admission-control path was runtime tested using a deliberately insecure Pod with `allowPrivilegeEscalation: true`. Kyverno rejected the admission request and the Pod was not created.
 
 This demonstrates that the privilege-escalation control is actively enforced rather than only documented or statically scanned.
 
@@ -584,25 +588,72 @@ Wazuh provides the project's **runtime security monitoring / SIEM layer**, compl
 
 # GitHub Actions Security Pipeline
 
-The final security workflow is located at:
+The repository contains two complementary GitHub Actions security workflows.
+
+## Comprehensive Security Pipeline
+
+```text
+.github/workflows/security.yml
+```
+
+This workflow performs:
+
+```text
+Repository Checkout
+        |
+        +----> Gitleaks
+        |
+        +----> Checkov
+        |
+        +----> npm audit
+        |
+        +----> Trivy Filesystem Scan
+        |
+        +----> Container Image Scanning
+        |
+        +----> CycloneDX SBOM
+        |
+        +----> GitHub Container Registry
+```
+
+It runs on pushes to `main` and pull requests targeting `main`.
+
+The workflow uses:
+
+```yaml
+permissions:
+  contents: read
+  packages: write
+```
+
+The `packages: write` permission supports publishing approved container images to GitHub Container Registry.
+
+## Lightweight Security Validation
 
 ```text
 .github/workflows/devsecops-security.yml
 ```
 
-The workflow performs:
+This workflow performs:
 
 ```text
 Repository Checkout
         |
-        v
-     Gitleaks
+        +----> Gitleaks
         |
-        v
-     Checkov
+        +----> Checkov
 ```
 
-The workflow is intentionally focused on security validation and does not claim production artifact publishing or registry deployment.
+It runs on pushes to `main` and `security/**` branches, and on pull requests targeting `main`.
+
+Its permissions are restricted to:
+
+```yaml
+permissions:
+  contents: read
+```
+
+Generated scan reports and SBOM files are treated as validation artifacts and are intentionally excluded from version control.
 
 ---
 
@@ -635,7 +686,8 @@ The workflow is intentionally focused on security validation and does not claim 
 .
 ├── .github/
 │   └── workflows/
-│       └── devsecops-security.yml
+│       ├── devsecops-security.yml
+│       └── security.yml
 │
 ├── backend/
 ├── frontend/
@@ -649,17 +701,22 @@ The workflow is intentionally focused on security validation and does not claim 
 │   ├── security-controls.md
 │   ├── security-exceptions.md
 │   ├── security-testing.md
+│   ├── threat-model.md
 │   ├── wazuh.md
 │   └── zero-trust.md
 │
-├── backend-sbom.json
-├── frontend-sbom.json
-├── mysql-sbom.json
-├── gitleaks-report.json
-├── checkov-results.json
+├── backend-policy.hcl
+├── docker-compose.yml
+├── docker-compose.dev.yml
+├── Makefile
+├── monitoring-values.yaml
+├── vault-values.yaml
+├── kyverno-patch.json
 ├── README.md
 └── LICENSE
 ```
+
+Generated SBOMs, scan reports, SQL backups, temporary Kubernetes manifests, and other local validation artifacts are intentionally excluded from version control.
 
 ---
 
@@ -675,6 +732,7 @@ Detailed documentation is available in the `docs/` directory:
 * [Security Testing](docs/security-testing.md)
 * [Security Exceptions](docs/security-exceptions.md)
 * [Project Report](docs/project-report.md)
+* [Threat Model](docs/threat-model.md)
 
 The documentation records implemented controls, validation evidence, limitations, and security exceptions.
 
@@ -725,6 +783,9 @@ Checkov GitHub Actions
 
 Trivy Kubernetes
   19 / 19 devsecops resources scanned
+  0 Kubernetes misconfigurations
+  0 secrets
+  0 RBAC findings
 
 Vault
   Authentication + injection validated
@@ -808,7 +869,8 @@ The result is a practical DevSecOps and Kubernetes security laboratory demonstra
 The application baseline is derived from the MIT-licensed open-source project:
 
 **dockerized-spring-react-mysql**
-by **Jhordy Gavinchu**
+
+by **Jhordy Gavinchu**.
 
 The original MIT license and copyright notice are retained in this repository.
 
