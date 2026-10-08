@@ -1683,7 +1683,7 @@ Checkov Kubernetes scanning completed with:
 * 0 failed
 * 11 skipped
 
-Trivy Kubernetes scanning evaluated 324/324 cluster resources.
+Trivy Kubernetes scanning evaluated 19/19 devsecops resources.
 
 **Residual Risk:**
 
@@ -2064,7 +2064,7 @@ Excessive workload or infrastructure resource consumption may exhaust the local 
 
 Kubernetes resources were scanned with Trivy and Checkov.
 
-Trivy evaluated 324/324 Kubernetes resources.
+Trivy evaluated 19/19 devsecops resources.
 
 Resource requests and limits were validated through Kyverno policy controls and Checkov.
 
@@ -2223,7 +2223,7 @@ Checkov Kubernetes scanning completed with:
 * 0 failed
 * 11 skipped
 
-Trivy Kubernetes scanning evaluated 324/324 Kubernetes resources.
+Trivy Kubernetes scanning evaluated 19/19 devsecops resources.
 
 **Residual Risk:**
 
@@ -3249,8 +3249,8 @@ The Kind cluster was scanned using Trivy Kubernetes scanning.
 
 **Result:**
 
-* 324/324 Kubernetes resources evaluated
-* Node scanning enabled
+* 19/19 devsecops Kubernetes resources evaluated
+* Node collector disabled for the focused application-namespace validation
 
 **Security Relevance:**
 

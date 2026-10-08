@@ -337,10 +337,9 @@ trivy k8s kind-devsecops-lab --report summary --timeout 15m
 The scan evaluated:
 
 ```text
-324 / 324 resources
+19 / 19 devsecops resources
 ```
 
-Node scanning was enabled.
 
 Result:
 
@@ -1276,7 +1275,7 @@ Checkov
 
 Trivy
     ↓
-324 / 324 Kubernetes resources scanned
+19 / 19 devsecops resources scanned
 
 Vault
     ↓

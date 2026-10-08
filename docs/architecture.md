@@ -290,10 +290,9 @@ The project also performs Kubernetes security scanning against the Kind cluster.
 The completed Kubernetes scan evaluated:
 
 ```text
-324 / 324 resources
+19 / 19 devsecops resources
 ```
 
-with node scanning enabled.
 
 ---
 

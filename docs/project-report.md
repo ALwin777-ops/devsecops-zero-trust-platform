@@ -473,10 +473,9 @@ trivy k8s kind-devsecops-lab --report summary --timeout 15m
 The scan evaluated:
 
 ```text
-324 / 324 resources
+19 / 19 devsecops resources
 ```
 
-Node scanning was enabled.
 
 Trivy was also used for container-related security analysis and SBOM generation.
 
@@ -876,7 +875,7 @@ Checkov
 0 failed checks in final scanned frameworks
 
 Trivy
-324 / 324 Kubernetes resources scanned
+19 / 19 devsecops resources scanned
 
 Vault
 Secret injection validated
