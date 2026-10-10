@@ -229,8 +229,8 @@ Implemented controls include:
 Backend:
 
 ```text
-UID: 100
-GID: 101
+UID: 10001
+GID: 10001
 ```
 
 Frontend:
@@ -804,6 +804,27 @@ Grafana
 
 ---
 
+# Final End-to-End Validation
+
+The application was validated in the local Kind Kubernetes environment after correcting the frontend-to-backend CORS configuration.
+
+Validated results:
+
+- **Kubernetes workloads:** Two backend pods were `2/2 Running`; both frontend pods and MySQL were `Running`.
+- **Vault integration:** Vault Agent authentication and file-based secret injection were validated.
+- **Database connectivity:** Spring Boot successfully connected to MySQL.
+- **Backend health:** The health endpoint returned HTTP 200 with status `UP`.
+- **CORS:** A preflight request from `http://localhost:8081` returned HTTP 200 with the expected CORS headers.
+- **API response:** The user API returned HTTP 200.
+- **Frontend workflow:** A test user remained visible after refreshing the page.
+- **Source control:** The CORS fix was committed and pushed to `main`.
+- **CI/CD:** GitHub Actions completed successfully, including backend and frontend image publishing.
+
+The local Kind cluster used the locally built `devsecops-backend:cors-fix` image during validation. The published GitHub Container Registry images are separate artifacts.
+
+These results demonstrate successful local integration testing; they do not imply production deployment or comprehensive application security testing.
+
+---
 # Project Scope and Limitations
 
 This project intentionally focuses on **security engineering and DevSecOps**, rather than application feature development.
